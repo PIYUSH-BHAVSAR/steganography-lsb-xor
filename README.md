@@ -1,91 +1,236 @@
-# Steganography Image Project
+# 🔐 StegoSecure Backend
 
-## 📌 Project Description
-This project implements **image-based steganography** using **Least Significant Bit (LSB) encoding** to hide encrypted messages within an image. The encryption is done using the **XOR cipher**, ensuring that the hidden message remains secure.
+Production-ready FastAPI backend for secure image steganography with encryption.
 
-## 🗂 Folder Structure
-```
-Steganography_img/
-│── Input_images/         # Folder containing input images
-│── Output_images/        # Folder containing output (stego) images
-│── Stegano.py            # Main Python script for steganography
-│── requirements.txt      # List of dependencies
-│── README.md             # Project documentation
-```
+## 🚀 Quick Start
 
-## 🚀 Features
-✅ **Image-to-Binary Conversion**: Converts an image into binary representation.  
-✅ **Message Encryption**: Uses XOR cipher to encrypt the secret message.  
-✅ **LSB Encoding**: Embeds the encrypted message into the least significant bits of the image.  
-✅ **Stego Image Creation**: Saves the modified image with the hidden message.  
-✅ **Message Extraction**: Extracts and decrypts the message from the stego image.  
+### Installation
 
-## 🛠️ Installation
-### Prerequisites
-Ensure you have **Python 3.7+** installed on your system. Then, install the required dependencies:
 ```bash
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-## 🖥️ Usage
-### 🔹 Encoding a Message into an Image
-Run the script and specify the image path, message, and encryption key:
+### Development Server
+
 ```bash
-python Stegano.py --mode encode --image Input_images/image.jpg --message "Secret Data" --key "secure123"
+# Run locally
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
-**Process:**
-1. Converts image to binary.
-2. Encrypts the message using the XOR cipher.
-3. Embeds the encrypted message into the image using LSB encoding.
-4. Saves the stego image in `Output_images/`.
 
-### 🔹 Decoding a Message from an Image
-To extract and decrypt the hidden message:
+### Production Server
+
 ```bash
-python Stegano.py --mode decode --image Output_images/stego_image.png --key "secure123"
-```
-**Process:**
-1. Extracts encrypted message from the stego image.
-2. Decrypts the message using the provided key.
-3. Prints the retrieved message.
-
-## 📷 Example Workflow
-```python
-# Step 1: Convert Image to Binary
-binary_data, shape = image_to_binary("Input_images/sample.jpg")
-
-# Step 2: Encrypt Message
-encrypted_message = encrypt_message("Confidential Data", "secure123")
-
-# Step 3: Embed Encrypted Message
-modified_binary = embed_message(binary_data, encrypted_message)
-
-# Step 4: Save Stego Image
-binary_to_image(modified_binary, shape, "Output_images/stego_image.png")
-
-# Step 5: Extract Encrypted Message
-stego_binary = stego_image_to_binary("Output_images/stego_image.png")
-extracted_encrypted_message = extract_encrypted_message(stego_binary)
-
-# Step 6: Decrypt the Message
-retrieved_message = decrypt_message(extracted_encrypted_message, "secure123")
-print("Retrieved Message:", retrieved_message)
+# Using Gunicorn with Uvicorn workers
+gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
 ```
 
-## 📌 Dependencies
-The project requires the following Python libraries:
-- **OpenCV** (`cv2`)
-- **NumPy** (`numpy`)
+## 📡 API Endpoints
 
-These are listed in `requirements.txt` and can be installed using:
+### Base URL
+```
+http://localhost:8000
+```
+
+### 1. Health Check
+```http
+GET /api/health
+```
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "service": "StegoSecure API"
+}
+```
+
+---
+
+### 2. Encrypt Image
+```http
+POST /api/encrypt
+```
+
+**Request Type:** `multipart/form-data`
+
+**Parameters:**
+- `image` (file): Image file (JPG/PNG, max 5MB)
+- `message` (string): Secret message to hide
+- `key` (string): Encryption key
+
+**Response:** PNG image file download
+
+**Example with cURL:**
 ```bash
-pip install -r requirements.txt
+curl -X POST "http://localhost:8000/api/encrypt" \
+  -F "image=@original.jpg" \
+  -F "message=Confidential Data" \
+  -F "key=secure123" \
+  --output stego_image.png
 ```
 
-## 🙌 Acknowledgments
-- Inspired by digital image processing techniques.
-- Developed for learning purposes in cryptography and steganography.
+---
 
-## 📧 Contact
-For any questions, feel free to reach out via [GitHub Issues](https://github.com/PIYUSH-BHAVSAR/Steganography_img/issues).
+### 3. Decrypt Image
+```http
+POST /api/decrypt
+```
 
+**Request Type:** `multipart/form-data`
+
+**Parameters:**
+- `image` (file): Stego image (JPG/PNG)
+- `key` (string): Decryption key
+
+**Response:**
+```json
+{
+  "status": "success",
+  "message": "Confidential Data"
+}
+```
+
+**Example with cURL:**
+```bash
+curl -X POST "http://localhost:8000/api/decrypt" \
+  -F "image=@stego_image.png" \
+  -F "key=secure123"
+```
+
+## 📚 Interactive Documentation
+
+- **Swagger UI:** http://localhost:8000/docs
+- **ReDoc:** http://localhost:8000/redoc
+
+## 🏗️ Project Structure
+
+```
+backend/
+├── main.py              # FastAPI application
+├── stegano.py           # Steganography logic
+├── config.py            # Configuration settings
+├── validators.py        # Input validation
+├── requirements.txt     # Python dependencies
+└── README.md           # This file
+```
+
+## ⚙️ Configuration
+
+Edit `config.py` to customize:
+- `MAX_IMAGE_SIZE_MB`: Maximum image size (default: 5MB)
+- `ALLOWED_EXTENSIONS`: Allowed file types
+- `API_PREFIX`: API route prefix
+
+## 🔒 Security Features
+
+- ✅ In-memory processing only (no file storage)
+- ✅ Stateless API design
+- ✅ XOR encryption with custom key
+- ✅ LSB steganography technique
+- ✅ Input validation and sanitization
+- ✅ CORS enabled for frontend integration
+
+## 🌐 Deployment
+
+### Render
+
+1. Create new Web Service
+2. Connect your repository
+3. Build Command: `pip install -r requirements.txt`
+4. Start Command: `gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT`
+
+### Railway
+
+1. Create new project
+2. Add GitHub repository
+3. Railway will auto-detect and deploy
+
+### Docker
+
+```dockerfile
+FROM python:3.10-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["gunicorn", "main:app", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
+```
+
+## 🧪 Testing
+
+### Python Tests
+```bash
+pytest tests/
+```
+
+### Manual Testing
+```bash
+# Test health endpoint
+curl http://localhost:8000/api/health
+
+# Test encryption (replace with your files)
+curl -X POST http://localhost:8000/api/encrypt \
+  -F "image=@test.jpg" \
+  -F "message=Test Message" \
+  -F "key=testkey" \
+  --output result.png
+
+# Test decryption
+curl -X POST http://localhost:8000/api/decrypt \
+  -F "image=@result.png" \
+  -F "key=testkey"
+```
+
+## 📊 Performance
+
+- **Response Time:** < 2 seconds
+- **Max Image Size:** 5MB
+- **Memory:** Optimized for cloud deployment
+- **Scalability:** Horizontal scaling ready
+
+## 🚧 Error Handling
+
+All endpoints return appropriate HTTP status codes:
+- `200`: Success
+- `400`: Bad Request (invalid input)
+- `500`: Internal Server Error
+
+Example error response:
+```json
+{
+  "detail": "Message too large for selected image"
+}
+```
+
+## 🔮 Future Enhancements
+
+- AES encryption support
+- JWT authentication
+- Rate limiting
+- Batch processing
+- Video steganography
+- WebSocket support
+
+## 📝 License
+
+MIT License - Feel free to use for your college project!
+
+## 🤝 Support
+
+For issues or questions, check:
+- Interactive docs at `/docs`
+- Health endpoint at `/api/health`
+
+---
+
+**Built with FastAPI + OpenCV + NumPy**
